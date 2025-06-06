@@ -149,20 +149,27 @@ doc.setFont('helvetica', 'bold');
 doc.text(client.name || '', right - 80, blocY);
 doc.setFont('helvetica', 'normal');
 blocY += 6;
-doc.text(client.address || '', right - 80, blocY);
-blocY += 6;
 doc.text(client.city || '', right - 80, blocY); // facultatif si tu as "city" dans ton form
 
 // Bloc infos devis
+// unique numéro de devis : type DDMMYYYYHHMM
+let numDevis =  `${new Date().toLocaleDateString('fr-FR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})}${new Date().toLocaleTimeString('fr-FR', {
+  hour: '2-digit',
+  minute: '2-digit',
+})}`.replace(/\D/g, ''); // format DDMMYYYYHHMM
 blocY += 10;
 doc.text(`Facture n° :`, right - 90, blocY);
-doc.text(`2024-07-07`, right - 60, blocY);
+doc.text(numDevis, right - 60, blocY);
 blocY += 6;
 doc.text(`Date :`, right - 90, blocY);
 doc.text(new Date().toLocaleDateString(), right - 60, blocY);
 blocY += 6;
 doc.text(`Objet :`, right - 90, blocY);
-doc.text('Rénovation complète salle de bains', right - 60, blocY);
+doc.text('Intervention- Réparation- Installation', right - 60, blocY);
 blocY += 6;
 doc.text(`Adresse :`, right - 90, blocY);
 doc.text(client.address || 'MARSEILLE', right - 60, blocY);
