@@ -40,3 +40,6 @@ Un artisan souhaite établir un devis pour la rénovation d'une salle de bains :
 ```bash
 npm install
 ng serve
+```
+
+L'application est accessible sur `http://localhost:4200`.

@@ -1,0 +1,87 @@
+<form [formGroup]="form" class="quote-form">
+  <h2>Créer un devis</h2>
+
+  <div formGroupName="client" class="client-info">
+    <mat-form-field appearance="outline">
+      <mat-label>Nom</mat-label>
+      <input matInput formControlName="name" />
+      <mat-icon matSuffix>person</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Adresse</mat-label>
+      <input matInput formControlName="address" />
+      <mat-icon matSuffix>location_on</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Téléphone</mat-label>
+      <input matInput formControlName="phone" />
+      <mat-icon matSuffix>phone</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" />
+      <mat-icon matSuffix>mail</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <table mat-table [dataSource]="items.controls" class="items-table" formArrayName="items">
+    <ng-container matColumnDef="designation">
+      <th mat-header-cell *matHeaderCellDef>Désignation</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+        <input matInput formControlName="designation" />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="quantity">
+      <th mat-header-cell *matHeaderCellDef>Qté</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+        <input matInput type="number" formControlName="quantity" />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="unitPrice">
+      <th mat-header-cell *matHeaderCellDef>Prix U.</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+        <input matInput type="number" formControlName="unitPrice" />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef>Total HT</th>
+      <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+        {{ row.get('quantity')!.value * row.get('unitPrice')!.value | number:'1.2-2' }} €
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let row; let i = index">
+        <button mat-icon-button color="warn" (click)="removeItem(i)" *ngIf="items.length > 1">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <button mat-button type="button" (click)="addItem()">
+    <mat-icon>add</mat-icon> Ajouter une ligne
+  </button>
+
+  <div class="totals">
+    <p>Total HT : {{ totalHT | number:'1.2-2' }} €</p>
+    <p>TVA (10%) : {{ tva | number:'1.2-2' }} €</p>
+    <p>Total TTC : {{ totalTTC | number:'1.2-2' }} €</p>
+  </div>
+
+  <div class="actions">
+    <button mat-raised-button color="primary" type="button" (click)="exportPDF()">
+      <mat-icon>picture_as_pdf</mat-icon> Export PDF
+    </button>
+  </div>
+</form>
