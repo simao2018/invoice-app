@@ -1,6 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,7 +32,13 @@ import autoTable from 'jspdf-autotable';
 })
 export class CreateQuoteComponent {
   form: FormGroup;
-  displayedColumns = ['designation', 'quantity', 'unitPrice', 'total', 'actions'];
+  displayedColumns = [
+    'designation',
+    'quantity',
+    'unitPrice',
+    'total',
+    'actions',
+  ];
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -59,11 +71,16 @@ export class CreateQuoteComponent {
   }
 
   rowTotal(row: FormGroup): number {
-    return (row.get('quantity')!.value || 0) * (row.get('unitPrice')!.value || 0);
+    return (
+      (row.get('quantity')!.value || 0) * (row.get('unitPrice')!.value || 0)
+    );
   }
 
   get totalHT(): number {
-    return this.items.controls.reduce((acc, ctrl) => acc + this.rowTotal(ctrl as FormGroup), 0);
+    return this.items.controls.reduce(
+      (acc, ctrl) => acc + this.rowTotal(ctrl as FormGroup),
+      0,
+    );
   }
 
   get tva(): number {
@@ -75,54 +92,95 @@ export class CreateQuoteComponent {
   }
 
   exportPDF(): void {
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
 
-    // En-tête artisan
+    // En-tête artisan (gauche)
     doc.setFontSize(12);
-    const leftStart = 10;
-    doc.text('WELL\'S PLOMBERIE', leftStart, 10);
-    doc.text('2 rue Pierre Guys, 13012 Marseille', leftStart, 16);
-    doc.text('T\u00E9l\u00E9phone : 06 66 62 16 19', leftStart, 22);
-    doc.text('Email : wellsplomberie@gmail.com', leftStart, 28);
-    doc.text('SIRET : 844 118 560 00017', leftStart, 34);
-    doc.text('Code APE : 4322A', leftStart, 40);
+    const left = 10;
+    doc.text('LOGO', left, 10);
+    doc.text("WELL'S PLOMBERIE", left, 20);
+    doc.text('2 rue Pierre Guys - 13012 Marseille', left, 26);
+    doc.text('T\u00E9l\u00E9phone : 06 66 62 16 19', left, 32);
+    doc.text('Email : wellsplomberie@gmail.com', left, 38);
+    doc.text('n\u00B0Siret : 8441185600017', left, 44);
+    doc.text('n\u00B0APE : 4322A', left, 50);
 
-    // En-t\u00EAte droite
-    const rightStart = 140;
-    doc.text('DEVIS n\u00B02', rightStart, 10);
-    doc.text(`Date : ${new Date().toLocaleDateString()}`, rightStart, 16);
-    doc.text('Objet : ', rightStart, 22);
+    // En-tête droite : infos devis
+    const right = 200; // A4 width ~210mm, keep margin
+    doc.text('DEVIS n\u00B02', right, 20, { align: 'right' });
+    doc.text(`Date : ${new Date().toLocaleDateString()}`, right, 26, {
+      align: 'right',
+    });
+    doc.text('Objet : R\u00E9novation', right, 32, { align: 'right' });
+    doc.text('Lieu : Adresse chantier', right, 38, { align: 'right' });
 
     // Infos client
     const client = this.form.get('client')!.value;
-    let cursorY = 50;
-    doc.text('Client :', leftStart, cursorY);
-    doc.text(client.name || '', leftStart + 20, cursorY);
+    let cursorY = 60;
+    doc.text('Client :', left, cursorY);
+    doc.text(client.name || '', left + 20, cursorY);
     cursorY += 6;
-    doc.text(client.address || '', leftStart + 20, cursorY);
+    doc.text(client.address || '', left + 20, cursorY);
 
     // Tableau des prestations
     const body = this.items.controls.map((ctrl) => [
       ctrl.get('designation')!.value,
-      ctrl.get('quantity')!.value,
-      ctrl.get('unitPrice')!.value,
+      `${ctrl.get('quantity')!.value} U`,
+      (ctrl.get('unitPrice')!.value || 0).toFixed(2),
       this.rowTotal(ctrl as FormGroup).toFixed(2),
     ]);
     autoTable(doc, {
       startY: cursorY + 10,
-      head: [['D\u00E9signation', 'Quantit\u00E9', 'Prix unitaire HT (\u20AC)', 'Montant HT (\u20AC)']],
+      head: [
+        [
+          'D\u00C9SIGNATION',
+          'Quantit\u00E9',
+          'Prix Unitaire HT (\u20AC)',
+          'Montant HT (\u20AC)',
+        ],
+      ],
       body,
       theme: 'grid',
-      styles: { fontSize: 11 },
+      headStyles: { fillColor: [255, 230, 0] },
+      styles: { fontSize: 10, cellPadding: 3 },
+      columnStyles: { 0: { cellWidth: 90 } },
     });
 
-    let finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
-    const totalX = 130;
-    doc.text(`Total HT : ${this.totalHT.toFixed(2)} \u20AC`, totalX, finalY + 10);
-    doc.text(`TVA (10%) : ${this.tva.toFixed(2)} \u20AC`, totalX, finalY + 16);
-    doc.text(`Total TTC : ${this.totalTTC.toFixed(2)} \u20AC`, totalX, finalY + 22);
+    const finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
+    doc.text(
+      `Total H.T : ${this.totalHT.toFixed(2)} \u20AC`,
+      right,
+      finalY + 10,
+      { align: 'right' },
+    );
+    doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20AC`, right, finalY + 16, {
+      align: 'right',
+    });
 
-    doc.text('Acompte de 50% \u00E0 la signature, solde \u00E0 la r\u00E9ception de la facture', leftStart, finalY + 40);
+    doc.setFillColor(255, 230, 0);
+    doc.rect(right - 60, finalY + 20, 60, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text(
+      `Total T.T.C : ${this.totalTTC.toFixed(2)} \u20AC`,
+      right - 3,
+      finalY + 26,
+      { align: 'right' },
+    );
+    doc.setFont('helvetica', 'normal');
+
+    // Pied de page
+    const footerY = finalY + 40;
+    doc.text('Conditions de r\u00E8glement :', left, footerY);
+    doc.text('- Acompte de 50% \u00E0 la signature', left, footerY + 6);
+    doc.text(
+      '- Solde \u00E0 la r\u00E9ception de la facture',
+      left,
+      footerY + 12,
+    );
+    doc.text('- Pour vous notre meilleure offre', left, footerY + 18);
+
+    doc.text('SIGNATURE :', right, footerY, { align: 'right' });
+    doc.line(right - 40, footerY + 20, right, footerY + 20);
 
     doc.save('devis.pdf');
   }
