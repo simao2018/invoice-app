@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormArray,
@@ -11,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTable } from '@angular/material/table';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -32,6 +32,7 @@ import autoTable from 'jspdf-autotable';
 })
 export class CreateQuoteComponent {
   form: FormGroup;
+  @ViewChild(MatTable) table!: MatTable<FormGroup>;
   displayedColumns = [
     'designation',
     'quantity',
@@ -72,10 +73,16 @@ export class CreateQuoteComponent {
     } else {
       this.items.push(group);
     }
+    if (this.table) {
+      this.table.renderRows();
+    }
   }
 
   removeItem(index: number): void {
     this.items.removeAt(index);
+    if (this.table) {
+      this.table.renderRows();
+    }
   }
 
   rowTotal(row: FormGroup): number {

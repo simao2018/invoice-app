@@ -28,7 +28,7 @@
   </div>
 
 <div class="items-container">
-  <table mat-table [dataSource]="items.controls" class="items-table" formArrayName="items" [trackBy]="trackByFn">
+  <table #table mat-table [dataSource]="items.controls" class="items-table" formArrayName="items" [trackBy]="trackByFn">
     <ng-container matColumnDef="designation">
       <th mat-header-cell *matHeaderCellDef>Désignation</th>
       <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
