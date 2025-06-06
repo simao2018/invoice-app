@@ -49,6 +49,7 @@ export class CreateQuoteComponent {
       client: this.fb.group({
         name: ['', Validators.required],
         address: [''],
+        city: [''],
         phone: [''],
         email: ['', Validators.email],
       }),
