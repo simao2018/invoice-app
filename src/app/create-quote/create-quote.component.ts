@@ -57,13 +57,17 @@ export class CreateQuoteComponent {
     return this.form.get('items') as FormArray;
   }
 
-  addItem(): void {
+  addItem(afterIndex?: number): void {
     const group = this.fb.group({
       designation: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       unitPrice: [0, [Validators.required, Validators.min(0)]],
     });
-    this.items.push(group);
+    if (afterIndex !== undefined) {
+      this.items.insert(afterIndex + 1, group);
+    } else {
+      this.items.push(group);
+    }
   }
 
   removeItem(index: number): void {
