@@ -65,6 +65,7 @@ export class CreateQuoteComponent {
   addItem(afterIndex?: number): void {
     const group = this.fb.group({
       designation: ['', Validators.required],
+      description: [''],
       quantity: [1, [Validators.required, Validators.min(1)]],
       unitPrice: [0, [Validators.required, Validators.min(0)]],
     });
@@ -138,8 +139,10 @@ export class CreateQuoteComponent {
     doc.text(client.address || '', left + 20, cursorY);
 
     // Tableau des prestations
-    const body = this.items.controls.map((ctrl) => [
-      ctrl.get('designation')!.value,
+    const body = this.items.controls.map((ctrl) => [{
+      title: ctrl.get('designation')!.value,
+      desc: ctrl.get('description')!.value,
+    },
       `${ctrl.get('quantity')!.value} U`,
       (ctrl.get('unitPrice')!.value || 0).toFixed(2),
       this.rowTotal(ctrl as FormGroup).toFixed(2),
@@ -159,6 +162,24 @@ export class CreateQuoteComponent {
       headStyles: { fillColor: [255, 230, 0] },
       styles: { fontSize: 10, cellPadding: 3 },
       columnStyles: { 0: { cellWidth: 90 } },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 0) {
+          const val = data.cell.raw as { title: string; desc: string };
+          data.cell.text = [val.title, val.desc];
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 0) {
+          const val = data.cell.raw as { title: string; desc: string };
+          const pos = (data.cell as any).getTextPos();
+          const x = pos.x;
+          const y = pos.y;
+          doc.setFont('helvetica', 'bold');
+          doc.text(val.title, x, y);
+          doc.setFont('helvetica', 'normal');
+          doc.text(val.desc, x, y + 4);
+        }
+      },
     });
 
     const finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;

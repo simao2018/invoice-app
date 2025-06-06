@@ -21,6 +21,15 @@
   overflow-y: auto;
 }
 
+.designation-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  textarea {
+    resize: vertical;
+  }
+}
+
 .totals {
   text-align: right;
   margin-top: 1rem;
