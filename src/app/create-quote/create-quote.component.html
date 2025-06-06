@@ -79,6 +79,21 @@
     <mat-icon>add</mat-icon> Ajouter une ligne
   </button>
 
+  <div class="manual-total" [formGroup]="form">
+    <mat-slide-toggle formControlName="manualHT">
+      Saisir le Total HT manuellement
+    </mat-slide-toggle>
+    <mat-form-field appearance="outline">
+      <mat-label>Total HT manuel</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="manualTotalHT"
+        [disabled]="!form.get('manualHT')!.value"
+      />
+    </mat-form-field>
+  </div>
+
   <div class="totals">
     <p>Total HT : {{ totalHT | number:'1.2-2' }} €</p>
     <p>TVA (10%) : {{ tva | number:'1.2-2' }} €</p>

@@ -21,6 +21,17 @@
   overflow-y: auto;
 }
 
+.manual-total {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  mat-form-field {
+    width: 200px;
+  }
+}
+
 .designation-cell {
   display: flex;
   flex-direction: column;

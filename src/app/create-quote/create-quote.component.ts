@@ -12,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule, MatTable } from '@angular/material/table';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -26,6 +27,7 @@ import autoTable from 'jspdf-autotable';
     MatButtonModule,
     MatIconModule,
     MatTableModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './create-quote.component.html',
   styleUrls: ['./create-quote.component.scss'],
@@ -50,6 +52,8 @@ export class CreateQuoteComponent {
         email: ['', Validators.email],
       }),
       items: this.fb.array([]),
+      manualHT: [false],
+      manualTotalHT: [0],
     });
     this.addItem();
   }
@@ -93,6 +97,9 @@ export class CreateQuoteComponent {
   }
 
   get totalHT(): number {
+    if (this.form.get('manualHT')!.value) {
+      return Number(this.form.get('manualTotalHT')!.value) || 0;
+    }
     return this.items.controls.reduce(
       (acc, ctrl) => acc + this.rowTotal(ctrl as FormGroup),
       0,
