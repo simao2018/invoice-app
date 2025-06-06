@@ -10,6 +10,7 @@ Cette application Angular permet à un artisan (ex. plombier, électricien…) d
 - 💰 Calcul automatique du total HT, TVA (10%) et TTC
 - 📄 Aperçu visuel et impression du devis
 - 📤 Export PDF
+- 📑 G\u00E9n\u00E9ration d'un PDF au format professionnel avec en-t\u00EAte de l'artisan
 - 📚 Historique des devis sauvegardés localement
 
 ## 🧑‍💻 Cas d’usage

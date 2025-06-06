@@ -76,6 +76,32 @@ export class CreateQuoteComponent {
 
   exportPDF(): void {
     const doc = new jsPDF();
+
+    // En-tête artisan
+    doc.setFontSize(12);
+    const leftStart = 10;
+    doc.text('WELL\'S PLOMBERIE', leftStart, 10);
+    doc.text('2 rue Pierre Guys, 13012 Marseille', leftStart, 16);
+    doc.text('T\u00E9l\u00E9phone : 06 66 62 16 19', leftStart, 22);
+    doc.text('Email : wellsplomberie@gmail.com', leftStart, 28);
+    doc.text('SIRET : 844 118 560 00017', leftStart, 34);
+    doc.text('Code APE : 4322A', leftStart, 40);
+
+    // En-t\u00EAte droite
+    const rightStart = 140;
+    doc.text('DEVIS n\u00B02', rightStart, 10);
+    doc.text(`Date : ${new Date().toLocaleDateString()}`, rightStart, 16);
+    doc.text('Objet : ', rightStart, 22);
+
+    // Infos client
+    const client = this.form.get('client')!.value;
+    let cursorY = 50;
+    doc.text('Client :', leftStart, cursorY);
+    doc.text(client.name || '', leftStart + 20, cursorY);
+    cursorY += 6;
+    doc.text(client.address || '', leftStart + 20, cursorY);
+
+    // Tableau des prestations
     const body = this.items.controls.map((ctrl) => [
       ctrl.get('designation')!.value,
       ctrl.get('quantity')!.value,
@@ -83,13 +109,21 @@ export class CreateQuoteComponent {
       this.rowTotal(ctrl as FormGroup).toFixed(2),
     ]);
     autoTable(doc, {
-      head: [['Désignation', 'Qté', 'Prix U.', 'Total HT']],
+      startY: cursorY + 10,
+      head: [['D\u00E9signation', 'Quantit\u00E9', 'Prix unitaire HT (\u20AC)', 'Montant HT (\u20AC)']],
       body,
+      theme: 'grid',
+      styles: { fontSize: 11 },
     });
-    let finalY = (doc as any).lastAutoTable.finalY || 10;
-    doc.text(`Total HT: ${this.totalHT.toFixed(2)} €`, 10, finalY + 10);
-    doc.text(`TVA (10%): ${this.tva.toFixed(2)} €`, 10, finalY + 20);
-    doc.text(`Total TTC: ${this.totalTTC.toFixed(2)} €`, 10, finalY + 30);
+
+    let finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
+    const totalX = 130;
+    doc.text(`Total HT : ${this.totalHT.toFixed(2)} \u20AC`, totalX, finalY + 10);
+    doc.text(`TVA (10%) : ${this.tva.toFixed(2)} \u20AC`, totalX, finalY + 16);
+    doc.text(`Total TTC : ${this.totalTTC.toFixed(2)} \u20AC`, totalX, finalY + 22);
+
+    doc.text('Acompte de 50% \u00E0 la signature, solde \u00E0 la r\u00E9ception de la facture', leftStart, finalY + 40);
+
     doc.save('devis.pdf');
   }
 }
