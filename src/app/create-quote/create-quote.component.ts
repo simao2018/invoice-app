@@ -53,6 +53,10 @@ export class CreateQuoteComponent {
     this.addItem();
   }
 
+  trackByFn(index: number, item: unknown): any {
+    return item;
+  }
+
   get items(): FormArray {
     return this.form.get('items') as FormArray;
   }

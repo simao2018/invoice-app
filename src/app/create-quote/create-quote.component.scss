@@ -16,6 +16,11 @@
   margin-top: 1rem;
 }
 
+.items-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 .totals {
   text-align: right;
   margin-top: 1rem;
