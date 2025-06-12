@@ -58,6 +58,7 @@ export class CreateQuoteComponent {
       items: this.fb.array([]),
       manualHT: [false],
       manualTotalHT: [0],
+      noVat: [false],
     });
     const saved = localStorage.getItem(this.storageKey);
     if (saved) {
@@ -101,6 +102,7 @@ export class CreateQuoteComponent {
       client: data.client || {},
       manualHT: data.manualHT,
       manualTotalHT: data.manualTotalHT,
+      noVat: data.noVat,
     });
 
     if (Array.isArray(data.items) && data.items.length) {
@@ -143,6 +145,9 @@ export class CreateQuoteComponent {
   }
 
   get tva(): number {
+    if (this.form.get('noVat')!.value) {
+      return 0;
+    }
     return this.totalHT * 0.1;
   }
 
@@ -230,24 +235,36 @@ let cursorY = y + 10;
     },
       `${ctrl.get('quantity')!.value} U`,
       (ctrl.get('unitPrice')!.value || 0).toFixed(2),
-      this.rowTotal(ctrl as FormGroup).toFixed(2),
-    ]);
-    autoTable(doc, {
-      startY: cursorY + 10,
-      head: [
-        [
-          'D\u00C9SIGNATION',
-          'Quantit\u00E9',
-          'Prix Unitaire HT (\u20AC)',
-          'Montant HT (\u20AC)',
-        ],
-      ],
-      body,
-      theme: 'grid',
-      headStyles: { fillColor: [255, 230, 0] },
-      styles: { fontSize: 10, cellPadding: 3 },
-      columnStyles: { 0: { cellWidth: 90 } },
-      didParseCell: (data) => {
+    if (!this.form.get('noVat')!.value) {
+      doc.text(
+        `Total H.T : ${this.totalHT.toFixed(2)} \u20AC`,
+        right,
+        finalY + 10,
+        { align: 'right' },
+      );
+      doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20AC`, right, finalY + 16, {
+        align: 'right',
+      });
+      doc.setFillColor(255, 230, 0);
+      doc.rect(right - 60, finalY + 20, 60, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(
+        `Total T.T.C : ${this.totalTTC.toFixed(2)} \u20AC`,
+        right - 3,
+        finalY + 26,
+        { align: 'right' },
+      );
+    } else {
+      doc.setFillColor(255, 230, 0);
+      doc.rect(right - 60, finalY + 10, 60, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(
+        `Total T.T.C : ${this.totalTTC.toFixed(2)} \u20AC`,
+        right - 3,
+        finalY + 16,
+        { align: 'right' },
+      );
+    }
   if (data.section === 'body' && data.column.index === 0) {
     const val = data.cell.raw as { title: string; desc: string };
     data.cell.text = ['']; // ⚠️ Vide le texte pour éviter la superposition

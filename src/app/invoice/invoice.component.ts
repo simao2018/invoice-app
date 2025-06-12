@@ -51,6 +51,7 @@ export class InvoiceComponent {
       items: this.fb.array([]),
       manualHT: [false],
       manualTotalHT: [0],
+      noVat: [false],
       deposit: [0],
     });
     const saved = localStorage.getItem(this.storageKey);
@@ -95,6 +96,7 @@ export class InvoiceComponent {
       client: data.client || {},
       manualHT: data.manualHT,
       manualTotalHT: data.manualTotalHT,
+      noVat: data.noVat,
       deposit: data.deposit,
     });
 
@@ -136,6 +138,9 @@ export class InvoiceComponent {
   }
 
   get tva(): number {
+    if (this.form.get('noVat')!.value) {
+      return 0;
+    }
     return this.totalHT * 0.1;
   }
 
@@ -237,16 +242,24 @@ export class InvoiceComponent {
     });
 
     const finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
-    doc.text(`Total H.T : ${this.totalHT.toFixed(2)} \u20ac`, right, finalY + 10, { align: 'right' });
-    doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20ac`, right, finalY + 16, { align: 'right' });
+    const noVat = this.form.get('noVat')!.value;
+    if (!noVat) {
+      doc.text(`Total H.T : ${this.totalHT.toFixed(2)} \u20ac`, right, finalY + 10, { align: 'right' });
+      doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20ac`, right, finalY + 16, { align: 'right' });
 
-    doc.setFillColor(255, 230, 0);
-    doc.rect(right - 60, finalY + 20, 60, 8, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total T.T.C : ${this.totalTTC.toFixed(2)} \u20ac`, right - 3, finalY + 26, { align: 'right' });
+      doc.setFillColor(255, 230, 0);
+      doc.rect(right - 60, finalY + 20, 60, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Total T.T.C : ${this.totalTTC.toFixed(2)} \u20ac`, right - 3, finalY + 26, { align: 'right' });
+    } else {
+      doc.setFillColor(255, 230, 0);
+      doc.rect(right - 60, finalY + 10, 60, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Total T.T.C : ${this.totalTTC.toFixed(2)} \u20ac`, right - 3, finalY + 16, { align: 'right' });
+    }
     doc.setFont('helvetica', 'normal');
-
-    doc.text(`Acompte : ${this.deposit.toFixed(2)} \u20ac`, right, finalY + 32, { align: 'right' });
+    const depositY = noVat ? finalY + 22 : finalY + 32;
+    doc.text(`Acompte : ${this.deposit.toFixed(2)} \u20ac`, right, depositY, { align: 'right' });
 
     const footerY = finalY + 48;
     doc.text('Conditions de r\u00e8glement :', left, footerY);
