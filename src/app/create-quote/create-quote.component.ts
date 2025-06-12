@@ -146,9 +146,11 @@ doc.setFontSize(10);
 let blocY = top + 20;
 doc.text('A :', right - 90, blocY);
 doc.setFont('helvetica', 'bold');
-doc.text(client.name || '', right - 80, blocY);
+const name = client.name || '';
+const nameLines = doc.splitTextToSize(name, 80);
+doc.text(nameLines, right - 80, blocY);
 doc.setFont('helvetica', 'normal');
-blocY += 6;
+blocY += 10;
 doc.text(client.city || '', right - 80, blocY); // facultatif si tu as "city" dans ton form
 
 // Bloc infos devis
@@ -168,11 +170,21 @@ blocY += 6;
 doc.text(`Date :`, right - 90, blocY);
 doc.text(new Date().toLocaleDateString(), right - 60, blocY);
 blocY += 6;
+// si objet et adresse sont trop longs, on les coupe
+
+// Format and cut the "Objet" text if too long
+const objet = 'Intervention- Réparation- Installation';
+const objetLines = doc.splitTextToSize(objet, 80);
 doc.text(`Objet :`, right - 90, blocY);
-doc.text('Intervention- Réparation- Installation', right - 60, blocY);
-blocY += 6;
+doc.text(objetLines, right - 60, blocY);
+blocY += 6 * objetLines.length;
+
+// Format and cut the "Adresse" text if too long
+const adresse = client.address || 'MARSEILLE';
+const adresseLines = doc.splitTextToSize(adresse, 80);
 doc.text(`Adresse :`, right - 90, blocY);
-doc.text(client.address || 'MARSEILLE', right - 60, blocY);
+doc.text(adresseLines, right - 60, blocY);
+blocY += 6 * adresseLines.length;
 
 // Ensuite : continue avec cursorY pour le tableau
 let cursorY = y + 10;
