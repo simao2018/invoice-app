@@ -44,6 +44,8 @@ export class CreateQuoteComponent {
     'actions',
   ];
 
+  private storageKey = 'quoteForm';
+
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       client: this.fb.group({
@@ -57,7 +59,16 @@ export class CreateQuoteComponent {
       manualHT: [false],
       manualTotalHT: [0],
     });
-    this.addItem();
+    const saved = localStorage.getItem(this.storageKey);
+    if (saved) {
+      this.loadForm(JSON.parse(saved));
+    } else {
+      this.addItem();
+    }
+
+    this.form.valueChanges.subscribe((val) => {
+      localStorage.setItem(this.storageKey, JSON.stringify(val));
+    });
   }
 
   trackByFn(index: number, item: unknown): any {
@@ -82,6 +93,29 @@ export class CreateQuoteComponent {
     }
     if (this.table) {
       this.table.renderRows();
+    }
+  }
+
+  private loadForm(data: any): void {
+    this.form.patchValue({
+      client: data.client || {},
+      manualHT: data.manualHT,
+      manualTotalHT: data.manualTotalHT,
+    });
+
+    if (Array.isArray(data.items) && data.items.length) {
+      this.items.clear();
+      data.items.forEach((it: any) => {
+        const group = this.fb.group({
+          designation: it.designation,
+          description: it.description,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+        });
+        this.items.push(group);
+      });
+    } else {
+      this.addItem();
     }
   }
 

@@ -37,6 +37,7 @@ export class InvoiceComponent {
   @ViewChild(MatTable) table!: MatTable<FormGroup>;
   displayedColumns = ['designation', 'quantity', 'unitPrice', 'total', 'actions'];
   private pdf = new PdfService();
+  private storageKey = 'invoiceForm';
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -52,7 +53,16 @@ export class InvoiceComponent {
       manualTotalHT: [0],
       deposit: [0],
     });
-    this.addItem();
+    const saved = localStorage.getItem(this.storageKey);
+    if (saved) {
+      this.loadForm(JSON.parse(saved));
+    } else {
+      this.addItem();
+    }
+
+    this.form.valueChanges.subscribe((val) => {
+      localStorage.setItem(this.storageKey, JSON.stringify(val));
+    });
   }
 
   trackByFn(index: number, item: unknown): any {
@@ -77,6 +87,30 @@ export class InvoiceComponent {
     }
     if (this.table) {
       this.table.renderRows();
+    }
+  }
+
+  private loadForm(data: any): void {
+    this.form.patchValue({
+      client: data.client || {},
+      manualHT: data.manualHT,
+      manualTotalHT: data.manualTotalHT,
+      deposit: data.deposit,
+    });
+
+    if (Array.isArray(data.items) && data.items.length) {
+      this.items.clear();
+      data.items.forEach((it: any) => {
+        const group = this.fb.group({
+          designation: it.designation,
+          description: it.description,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+        });
+        this.items.push(group);
+      });
+    } else {
+      this.addItem();
     }
   }
 
