@@ -14,7 +14,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule, MatTable } from '@angular/material/table';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import jsPDF from 'jspdf';
-import { Item, PdfService } from '../pdf.service';
+import autoTable from 'jspdf-autotable';
+import { logoBase64 } from '../logoPath';
 
 @Component({
   selector: 'app-invoice',
@@ -36,7 +37,6 @@ export class InvoiceComponent {
   form: FormGroup;
   @ViewChild(MatTable) table!: MatTable<FormGroup>;
   displayedColumns = ['designation', 'quantity', 'unitPrice', 'total', 'actions'];
-  private pdf = new PdfService();
   private storageKey = 'invoiceForm';
 
   constructor(private fb: FormBuilder) {
@@ -148,21 +148,115 @@ export class InvoiceComponent {
   }
 
   generate(): void {
-    const items: Item[] = this.items.controls.map((ctrl) => ({
-      title: ctrl.get('designation')!.value,
-      description: ctrl.get('description')!.value,
-      quantity: ctrl.get('quantity')!.value,
-      price: ctrl.get('unitPrice')!.value,
-    }));
-    const doc = this.pdf.generate(items);
-    doc.setFontSize(18);
-    doc.text('Facture', 10, 10);
-    const finalY = (doc as any).lastAutoTable?.finalY || 20;
-    doc.setFontSize(12);
-    doc.text(`Total HT : ${this.totalHT.toFixed(2)} €`, 10, finalY + 10);
-    doc.text(`TVA (10%) : ${this.tva.toFixed(2)} €`, 10, finalY + 16);
-    doc.text(`Total TTC : ${this.totalTTC.toFixed(2)} €`, 10, finalY + 22);
-    doc.text(`Acompte : ${this.deposit.toFixed(2)} €`, 10, finalY + 28);
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    const left = 10;
+    const top = 10;
+    const right = 200;
+
+    const client = this.form.get('client')!.value;
+
+    doc.addImage(logoBase64, 'JPEG', left, top, 80, 70);
+
+    doc.setFontSize(10);
+    let y = top + 80;
+
+    doc.setFontSize(16);
+    doc.setFillColor(255, 230, 0);
+    doc.rect(right - 90, top, 80, 12, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('FACTURE', right - 50, top + 9, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+
+    let blocY = top + 20;
+    doc.text('A :', right - 90, blocY);
+    doc.setFont('helvetica', 'bold');
+    doc.text(client.name || '', right - 80, blocY);
+    doc.setFont('helvetica', 'normal');
+    blocY += 6;
+    doc.text(client.city || '', right - 80, blocY);
+
+    let numFacture = `${new Date().toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })}${new Date().toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`.replace(/\D/g, '');
+    blocY += 10;
+    doc.text(`Facture n\u00b0 :`, right - 90, blocY);
+    doc.text(numFacture, right - 60, blocY);
+    blocY += 6;
+    doc.text(`Date :`, right - 90, blocY);
+    doc.text(new Date().toLocaleDateString(), right - 60, blocY);
+    blocY += 6;
+    doc.text(`Objet :`, right - 90, blocY);
+    doc.text('Intervention- R\u00e9paration- Installation', right - 60, blocY);
+    blocY += 6;
+    doc.text(`Adresse :`, right - 90, blocY);
+    doc.text(client.address || 'MARSEILLE', right - 60, blocY);
+
+    let cursorY = y + 10;
+    const body = this.items.controls.map((ctrl) => [
+      {
+        title: ctrl.get('designation')!.value,
+        desc: ctrl.get('description')!.value,
+      },
+      `${ctrl.get('quantity')!.value} U`,
+      (ctrl.get('unitPrice')!.value || 0).toFixed(2),
+      this.rowTotal(ctrl as FormGroup).toFixed(2),
+    ]);
+
+    autoTable(doc, {
+      startY: cursorY + 10,
+      head: [['D\u00c9SIGNATION', 'Quantit\u00e9', 'Prix Unitaire HT (\u20ac)', 'Montant HT (\u20ac)']],
+      body,
+      theme: 'grid',
+      headStyles: { fillColor: [255, 230, 0] },
+      styles: { fontSize: 10, cellPadding: 3 },
+      columnStyles: { 0: { cellWidth: 90 } },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 0) {
+          const val = data.cell.raw as { title: string; desc: string };
+          data.cell.text = [''];
+        }
+      },
+      didDrawCell: (data) => {
+        if (data.section === 'body' && data.column.index === 0) {
+          const val = data.cell.raw as { title: string; desc: string };
+          const x = data.cell.x + 2;
+          const yCell = data.cell.y + 4;
+          doc.setFont('helvetica', 'bold');
+          doc.text(val.title, x, yCell);
+          doc.setFont('helvetica', 'normal');
+          doc.text(val.desc, x, yCell + 5);
+        }
+      },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
+    doc.text(`Total H.T : ${this.totalHT.toFixed(2)} \u20ac`, right, finalY + 10, { align: 'right' });
+    doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20ac`, right, finalY + 16, { align: 'right' });
+
+    doc.setFillColor(255, 230, 0);
+    doc.rect(right - 60, finalY + 20, 60, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total T.T.C : ${this.totalTTC.toFixed(2)} \u20ac`, right - 3, finalY + 26, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+
+    doc.text(`Acompte : ${this.deposit.toFixed(2)} \u20ac`, right, finalY + 32, { align: 'right' });
+
+    const footerY = finalY + 48;
+    doc.text('Conditions de r\u00e8glement :', left, footerY);
+    doc.text('- Acompte de 50% \u00e0 la signature', left, footerY + 6);
+    doc.text('- Solde \u00e0 la r\u00e9ception de la facture', left, footerY + 12);
+    doc.text('- Pour vous notre meilleure offre', left, footerY + 18);
+
+    doc.text('SIGNATURE :', right, footerY, { align: 'right' });
+    doc.line(right - 40, footerY + 20, right, footerY + 20);
+
     doc.save('facture.pdf');
   }
 }
