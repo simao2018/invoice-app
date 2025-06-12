@@ -228,60 +228,34 @@ blocY += 6 * adresseLines.length;
 // Ensuite : continue avec cursorY pour le tableau
 let cursorY = y + 10;
 
-    // Tableau des prestations
-    const body = this.items.controls.map((ctrl) => [{
-      title: ctrl.get('designation')!.value,
-      desc: ctrl.get('description')!.value,
-    },
-      `${ctrl.get('quantity')!.value} U`,
-      (ctrl.get('unitPrice')!.value || 0).toFixed(2),
-    if (!this.form.get('noVat')!.value) {
-      doc.text(
-        `Total H.T : ${this.totalHT.toFixed(2)} \u20AC`,
-        right,
-        finalY + 10,
-        { align: 'right' },
-      );
-      doc.text(`TVA 10 % : ${this.tva.toFixed(2)} \u20AC`, right, finalY + 16, {
-        align: 'right',
-      });
-      doc.setFillColor(255, 230, 0);
-      doc.rect(right - 60, finalY + 20, 60, 8, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.text(
-        `Total T.T.C : ${this.totalTTC.toFixed(2)} \u20AC`,
-        right - 3,
-        finalY + 26,
-        { align: 'right' },
-      );
-    } else {
-      doc.setFillColor(255, 230, 0);
-      doc.rect(right - 60, finalY + 10, 60, 8, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.text(
-        `Total T.T.C : ${this.totalTTC.toFixed(2)} \u20AC`,
-        right - 3,
-        finalY + 16,
-        { align: 'right' },
-      );
+// Tableau des prestations
+const body = this.items.controls.map((ctrl) => ([
+  { title: ctrl.get('designation')!.value, desc: ctrl.get('description')!.value },
+  `${ctrl.get('quantity')!.value} U`,
+  (ctrl.get('unitPrice')!.value || 0).toFixed(2)
+]));
+
+autoTable(doc, {
+  head: [['Designation', 'Quantity', 'Unit Price']],
+  body: body,
+  didParseCell: (data) => {
+    if (data.section === 'body' && data.column.index === 0) {
+      const val = data.cell.raw as { title: string; desc: string };
+      data.cell.text = ['']; // ⚠️ Vide le texte pour éviter la superposition
     }
-  if (data.section === 'body' && data.column.index === 0) {
-    const val = data.cell.raw as { title: string; desc: string };
-    data.cell.text = ['']; // ⚠️ Vide le texte pour éviter la superposition
+  },
+  didDrawCell: (data) => {
+    if (data.section === 'body' && data.column.index === 0) {
+      const val = data.cell.raw as { title: string; desc: string };
+      const x = data.cell.x + 2;
+      const y = data.cell.y + 4;
+      doc.setFont('helvetica', 'bold');
+      doc.text(val.title, x, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(val.desc, x, y + 5);
+    }
   }
-},
-didDrawCell: (data) => {
-  if (data.section === 'body' && data.column.index === 0) {
-    const val = data.cell.raw as { title: string; desc: string };
-    const x = data.cell.x + 2;
-    const y = data.cell.y + 4;
-    doc.setFont('helvetica', 'bold');
-    doc.text(val.title, x, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(val.desc, x, y + 5);
-  }
-}
-    });
+});
 
     const finalY = (doc as any).lastAutoTable.finalY || cursorY + 20;
     doc.text(
