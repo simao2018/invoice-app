@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -9,10 +9,12 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { Item, PdfService } from './pdf.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   imports: [
+    CommonModule,
     RouterOutlet,
     RouterLink,
     MatToolbarModule,
@@ -27,6 +29,10 @@ import { Item, PdfService } from './pdf.service';
 export class AppComponent {
   title = 'invoice-app';
 
+  private breakpointObserver = inject(BreakpointObserver);
+  public now = new Date();
+  public year = this.now.getFullYear();
+
   isSmallScreen$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Handset, Breakpoints.Tablet])
     .pipe(
@@ -36,7 +42,7 @@ export class AppComponent {
 
   private pdf = new PdfService();
 
-  constructor(private breakpointObserver: BreakpointObserver) {}
+  // constructor(private breakpointObserver: BreakpointObserver) {}
 
   generate() {
     const items: Item[] = [

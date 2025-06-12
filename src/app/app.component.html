@@ -10,7 +10,9 @@
       <button mat-icon-button (click)="drawer.toggle()" *ngIf="isSmallScreen$ | async" aria-label="Menu">
         <mat-icon>menu</mat-icon>
       </button>
-      <span>Devis Artisan</span>
+      <span>
+        Chancel SIMO - Gestion des devis et factures v 1.0 - {{year}}
+      </span>
     </mat-toolbar>
     <div class="container">
       <router-outlet></router-outlet>
