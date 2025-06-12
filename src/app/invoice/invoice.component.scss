@@ -46,6 +46,14 @@
   margin-top: 1rem;
 }
 
+.deposit {
+  text-align: right;
+  mat-form-field {
+    width: 200px;
+  }
+  margin-top: 1rem;
+}
+
 .actions {
   text-align: right;
   margin-top: 1rem;

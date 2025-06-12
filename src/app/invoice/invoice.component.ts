@@ -50,6 +50,7 @@ export class InvoiceComponent {
       items: this.fb.array([]),
       manualHT: [false],
       manualTotalHT: [0],
+      deposit: [0],
     });
     this.addItem();
   }
@@ -108,6 +109,10 @@ export class InvoiceComponent {
     return this.totalHT + this.tva;
   }
 
+  get deposit(): number {
+    return Number(this.form.get('deposit')!.value) || 0;
+  }
+
   generate(): void {
     const items: Item[] = this.items.controls.map((ctrl) => ({
       title: ctrl.get('designation')!.value,
@@ -118,6 +123,12 @@ export class InvoiceComponent {
     const doc = this.pdf.generate(items);
     doc.setFontSize(18);
     doc.text('Facture', 10, 10);
+    const finalY = (doc as any).lastAutoTable?.finalY || 20;
+    doc.setFontSize(12);
+    doc.text(`Total HT : ${this.totalHT.toFixed(2)} €`, 10, finalY + 10);
+    doc.text(`TVA (10%) : ${this.tva.toFixed(2)} €`, 10, finalY + 16);
+    doc.text(`Total TTC : ${this.totalTTC.toFixed(2)} €`, 10, finalY + 22);
+    doc.text(`Acompte : ${this.deposit.toFixed(2)} €`, 10, finalY + 28);
     doc.save('facture.pdf');
   }
 }
