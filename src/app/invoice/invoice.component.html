@@ -1,6 +1,114 @@
-<div class="invoice-page">
+<form [formGroup]="form" class="invoice-form">
   <h2>Créer une facture</h2>
-  <button mat-raised-button color="primary" (click)="generate()">
-    <mat-icon>picture_as_pdf</mat-icon> Générer la facture
+
+  <div formGroupName="client" class="client-info">
+    <mat-form-field appearance="outline">
+      <mat-label>Nom</mat-label>
+      <input matInput formControlName="name" />
+      <mat-icon matSuffix>person</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Adresse</mat-label>
+      <input matInput formControlName="address" />
+      <mat-icon matSuffix>location_on</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Ville</mat-label>
+      <input matInput formControlName="city" />
+      <mat-icon matSuffix>location_city</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Téléphone</mat-label>
+      <input matInput formControlName="phone" />
+      <mat-icon matSuffix>phone</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" />
+      <mat-icon matSuffix>mail</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <div class="items-container">
+    <table #table mat-table [dataSource]="items.controls" class="items-table" formArrayName="items" [trackBy]="trackByFn">
+      <ng-container matColumnDef="designation">
+        <th mat-header-cell *matHeaderCellDef>Désignation</th>
+        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="designation-cell">
+          <input matInput formControlName="designation" placeholder="Titre" />
+          <textarea matInput formControlName="description" placeholder="Description" rows="2"></textarea>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="quantity">
+        <th mat-header-cell *matHeaderCellDef>Qté</th>
+        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+          <input matInput type="number" formControlName="quantity" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="unitPrice">
+        <th mat-header-cell *matHeaderCellDef>Prix U.</th>
+        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+          <input matInput type="number" formControlName="unitPrice" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total HT</th>
+        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+          {{ row.get('quantity')!.value * row.get('unitPrice')!.value | number:'1.2-2' }} €
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row; let i = index">
+          <button mat-icon-button color="primary" type="button" (click)="addItem(i)">
+            <mat-icon>add</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" type="button" (click)="removeItem(i)" *ngIf="items.length > 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <button mat-button type="button" (click)="addItem()">
+    <mat-icon>add</mat-icon> Ajouter une ligne
   </button>
-</div>
+
+  <div class="manual-total" [formGroup]="form">
+    <mat-slide-toggle formControlName="manualHT">
+      Saisir le Total HT manuellement
+    </mat-slide-toggle>
+    <mat-form-field appearance="outline">
+      <mat-label>Total HT manuel</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="manualTotalHT"
+        [disabled]="!form.get('manualHT')!.value"
+      />
+    </mat-form-field>
+  </div>
+
+  <div class="totals">
+    <p>Total HT : {{ totalHT | number:'1.2-2' }} €</p>
+    <p>TVA (10%) : {{ tva | number:'1.2-2' }} €</p>
+    <p>Total TTC : {{ totalTTC | number:'1.2-2' }} €</p>
+  </div>
+
+  <div class="actions">
+    <button mat-raised-button color="primary" type="button" (click)="generate()">
+      <mat-icon>picture_as_pdf</mat-icon> Générer la facture
+    </button>
+  </div>
+</form>

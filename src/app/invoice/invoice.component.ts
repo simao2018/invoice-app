@@ -1,21 +1,123 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule, MatTable } from '@angular/material/table';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import jsPDF from 'jspdf';
+import { Item, PdfService } from '../pdf.service';
 
 @Component({
   selector: 'app-invoice',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatSlideToggleModule,
+  ],
   templateUrl: './invoice.component.html',
   styleUrl: './invoice.component.scss'
 })
 export class InvoiceComponent {
+  form: FormGroup;
+  @ViewChild(MatTable) table!: MatTable<FormGroup>;
+  displayedColumns = ['designation', 'quantity', 'unitPrice', 'total', 'actions'];
+  private pdf = new PdfService();
+
+  constructor(private fb: FormBuilder) {
+    this.form = this.fb.group({
+      client: this.fb.group({
+        name: ['', Validators.required],
+        address: [''],
+        city: [''],
+        phone: [''],
+        email: ['', Validators.email],
+      }),
+      items: this.fb.array([]),
+      manualHT: [false],
+      manualTotalHT: [0],
+    });
+    this.addItem();
+  }
+
+  trackByFn(index: number, item: unknown): any {
+    return item;
+  }
+
+  get items(): FormArray {
+    return this.form.get('items') as FormArray;
+  }
+
+  addItem(afterIndex?: number): void {
+    const group = this.fb.group({
+      designation: ['', Validators.required],
+      description: [''],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      unitPrice: [0, [Validators.required, Validators.min(0)]],
+    });
+    if (afterIndex !== undefined) {
+      this.items.insert(afterIndex + 1, group);
+    } else {
+      this.items.push(group);
+    }
+    if (this.table) {
+      this.table.renderRows();
+    }
+  }
+
+  removeItem(index: number): void {
+    this.items.removeAt(index);
+    if (this.table) {
+      this.table.renderRows();
+    }
+  }
+
+  rowTotal(row: FormGroup): number {
+    return (row.get('quantity')!.value || 0) * (row.get('unitPrice')!.value || 0);
+  }
+
+  get totalHT(): number {
+    if (this.form.get('manualHT')!.value) {
+      return Number(this.form.get('manualTotalHT')!.value) || 0;
+    }
+    return this.items.controls.reduce(
+      (acc, ctrl) => acc + this.rowTotal(ctrl as FormGroup),
+      0
+    );
+  }
+
+  get tva(): number {
+    return this.totalHT * 0.1;
+  }
+
+  get totalTTC(): number {
+    return this.totalHT + this.tva;
+  }
+
   generate(): void {
-    const doc = new jsPDF();
+    const items: Item[] = this.items.controls.map((ctrl) => ({
+      title: ctrl.get('designation')!.value,
+      description: ctrl.get('description')!.value,
+      quantity: ctrl.get('quantity')!.value,
+      price: ctrl.get('unitPrice')!.value,
+    }));
+    const doc = this.pdf.generate(items);
     doc.setFontSize(18);
-    doc.text('Facture', 10, 20);
+    doc.text('Facture', 10, 10);
     doc.save('facture.pdf');
   }
 }
