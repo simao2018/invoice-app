@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterModule } from '@angular/router';
+import { MaintenanceComponent } from './maintenance/maintenance.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -10,6 +11,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { Item, PdfService } from './pdf.service';
 import { CommonModule } from '@angular/common';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -21,13 +23,16 @@ import { CommonModule } from '@angular/common';
     MatSidenavModule,
     MatListModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MaintenanceComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'invoice-app';
+
+  maintenanceMode = environment.maintenanceMode;
 
   private breakpointObserver = inject(BreakpointObserver);
   public now = new Date();
